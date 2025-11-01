@@ -1,0 +1,22 @@
+{
+  "name": "lost_nexus",
+  "type": "module",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "dev": "concurrently \"bun run --watch ./build.js\" \"npm:tailwind:dev\"",
+    "build": "bun run ./build.js",
+    "tailwind:dev": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --watch",
+    "tailwind:build": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --minify"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.8",
+    "chart.js": "^4.5.0",
+    "tailwindcss": "^4.1.8"
+  }
+}

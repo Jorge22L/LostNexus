@@ -1,0 +1,98 @@
+<?php
+
+use App\Controllers\CategoriasController;
+use App\Controllers\HomeController;
+use App\Controllers\LoginController;
+use App\Controllers\ObjetosDevueltosController;
+use App\Controllers\ObjetosPerdidosController;
+use App\Controllers\PuntoRecepcionController;
+use App\Router;
+use App\Utils\Logger;
+
+require_once __DIR__ . '/../includes/app.php';
+
+$router = new Router();
+
+// Logger
+Logger::register();
+
+// HomePage
+$router->get('/', [HomeController::class, 'index']);
+
+// Objetos Perdidos
+$router->get('/objetosperdidos', [ObjetosPerdidosController::class, 'index']);
+$router->get('/objetosperdidos/archivados', [ObjetosPerdidosController::class, 'archivados'], true);
+$router->post('/objetosperdidos/dar-de-baja/{id}', [ObjetosPerdidosController::class, 'darDeBaja'], true);
+
+// Objetos Devueltos
+$router->get('/objetosdevueltos', [ObjetosDevueltosController::class, 'index'], true);
+$router->get('/objetosdevueltos/ver', [ObjetosDevueltosController::class, 'ver'], true);
+$router->get('/objetosdevueltos/ver/{id}', [ObjetosDevueltosController::class, 'ver'], true);
+
+// Agregar Objetos
+$router->get('/agregar_objetos', [ObjetosPerdidosController::class, 'crear'], true);
+$router->post('/agregar_objetos/crear', [ObjetosPerdidosController::class, 'crear'], true);
+
+// Ver Objetos
+$router->get('/objetosperdidos/ver', [ObjetosPerdidosController::class, 'ver']);
+$router->get('/objetosperdidos/ver/{id}', [ObjetosPerdidosController::class, 'ver']);
+
+// ActualizarObjetos
+$router->get('/objetosperdidos/editar/{id}', [ObjetosPerdidosController::class, 'editar'], true);
+$router->post('/objetosperdidos/editar/{id}', [ObjetosPerdidosController::class, 'editar'], true);
+
+// Devolver Objetos
+$router->get('/objetosperdidos/devolver/{id}', [ObjetosPerdidosController::class, 'devolver'], true);
+$router->post('/objetosperdidos/devolver/{id}', [ObjetosPerdidosController::class, 'devolver'], true);
+
+// Categorias
+$router->get('/categorias', [CategoriasController::class, 'index'], true);
+
+// Agregar Categorias
+$router->get('/agregar_categoria', [CategoriasController::class, 'crear'], true);
+$router->post('/agregar_categoria/crear', [CategoriasController::class, 'crear'], true);
+
+// Editar Categorias
+$router->get('/categorias/editar/{id}', [CategoriasController::class, 'editar'], true);
+$router->post('/categorias/editar/{id}', [CategoriasController::class, 'editar'], true);
+
+// Eliminar Categorias
+$router->post('/categorias', [CategoriasController::class, 'eliminar'], true);
+
+// Puntos de Recepcion
+$router->get('/puntosrecepcion', [PuntoRecepcionController::class, 'index'], true);
+
+// Agregar Puntos de Recepcion
+$router->get('/agregar_punto_recepcion', [PuntoRecepcionController::class, 'crear'], true);
+$router->post('/agregar_punto_recepcion/crear', [PuntoRecepcionController::class, 'crear'], true);
+
+// Editar Puntos de Recepcion
+$router->get('/puntosrecepcion/editar/{id}', [PuntoRecepcionController::class, 'editar'], true);
+$router->post('/puntosrecepcion/editar/{id}', [PuntoRecepcionController::class, 'editar'], true);
+
+// Eliminar Puntos de Recepcion
+$router->post('/puntosrecepcion', [PuntoRecepcionController::class, 'eliminar'], true);
+
+// Login
+$router->get('/login', [LoginController::class, 'login']);
+$router->post('/login', [LoginController::class, 'login']);
+
+// Logout
+$router->get('/logout', [LoginController::class, 'logout']);
+
+// Listar Usuarios
+$router->get('/admin/usuarios', [LoginController::class, 'listar'], true);
+
+// Crear Cuenta
+$router->get('/admin/usuarios/crear', [LoginController::class, 'crear'], true);
+$router->post('/admin/usuarios/crear', [LoginController::class, 'crear'], true);
+
+// Editar Cuenta
+$router->get('/admin/usuarios/editar/{id}', [LoginController::class, 'editar'], true);
+$router->post('/admin/usuarios/editar/{id}', [LoginController::class, 'editar'], true);
+
+// Eliminar Cuenta
+$router->post('/admin/usuarios/eliminar', [LoginController::class, 'eliminar'], true);
+
+// Comprueba y valida las rutas, que existen y les asigna las funciones del controlador
+$router->comprobarRutas();

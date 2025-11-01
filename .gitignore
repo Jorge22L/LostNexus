@@ -1,0 +1,43 @@
+# Dependencias
+/vendor/
+/node_modules/
+/public/imagenes/
+/public/evidencia/
+
+# Entornos y configuraciones sensibles
+.env
+.env.local
+.env.*.local
+
+# Tailwind y frontend
+/public/assets/css/output.css
+/public/assets/css/output.min.css
+
+# Logs y caché
+*.log
+*.cache
+.DS_Store
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# Sistemas de paquetes
+composer.lock
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Archivos de desarrollo local
+*.local.php
+*.bak
+*.tmp
+
+# Builds y assets generados
+/public/assets/dist/
+/public/hot
+
+# Archivos de variables de entorno
+.env
+.env.production
+.env.development
