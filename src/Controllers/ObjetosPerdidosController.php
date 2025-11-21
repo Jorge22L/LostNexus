@@ -103,8 +103,8 @@ class ObjetosPerdidosController
 
     public static function crear(Router $router)
     {
-        // Verificar permisos: Estudiantes no pueden crear objetos
-        if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === 'Estudiante') {
+        // Verificar permisos: Estudiantes y Docentes no pueden crear objetos
+        if (isset($_SESSION['rol_nombre']) && ($_SESSION['rol_nombre'] === 'Estudiante' || $_SESSION['rol_nombre'] === 'Docente')) {
             header('Location: /objetosperdidos');
             exit;
         }
@@ -229,8 +229,8 @@ class ObjetosPerdidosController
 
     public static function editar(Router $router, $id)
     {
-        // Verificar permisos: Estudiantes no pueden editar objetos
-        if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === 'Estudiante') {
+        // Verificar permisos: Estudiantes y Docentes no pueden editar objetos
+        if (isset($_SESSION['rol_nombre']) && ($_SESSION['rol_nombre'] === 'Estudiante' || $_SESSION['rol_nombre'] === 'Docente')) {
             header('Location: /objetosperdidos');
             exit;
         }

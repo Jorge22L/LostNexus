@@ -35,7 +35,7 @@
                         <div class="absolute left-0 w-40 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
                             <a href="/objetosperdidos" class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100">Objetos perdidos</a>
                             <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true): ?>
-                                <?php if (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante'): ?>
+                                <?php if (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente')): ?>
                                     <a href="/agregar_objetos" class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100">Agregar Objetos</a>
                                     <a href="/objetosdevueltos" class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100">Objetos devueltos</a>
                                     <a href="/objetosperdidos/archivados" class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100">Objetos archivados</a>
@@ -44,7 +44,7 @@
                         </div>
                     </div>
 
-                    <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante')): ?>
+                    <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente'))): ?>
                         <div class="relative group">
                             <button class="nav-link group flex items-center gap-1 px-2 py-1 text-sm sm:text-base cursor-pointer">
                                 Categorias
@@ -61,7 +61,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante')): ?>
+                    <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente'))): ?>
                         <div class="relative group">
                             <button class="nav-link group flex items-center gap-1 px-2 py-1 text-sm sm:text-base cursor-pointer">
                                 Puntos
@@ -88,7 +88,7 @@
                                 <span class="nav-link-span group-hover:w-full"></span>
                             </button>
                             <div class="absolute right-0 w-40 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
-                                <?php if (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante'): ?>
+                                <?php if (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente')): ?>
                                     <a class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100" href="/admin/usuarios">Usuarios</a>
                                     <a class="block px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-100" href="/admin/usuarios/crear">Agregar Usuario</a>
                                 <?php endif; ?>
@@ -122,7 +122,7 @@
                 </a>
 
                 <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true): ?>
-                    <?php if (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante'): ?>
+                    <?php if (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente')): ?>
                         <a href="/agregar_objetos" class="nav-link-mobile">
                             Agregar Objetos
                         </a>
@@ -132,7 +132,7 @@
                     <?php endif; ?>
                 <?php endif; ?>
 
-                <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante')): ?>
+                <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente'))): ?>
                     <details class="group">
                         <summary class="nav-link-mobile flex justify-between items-center list-none cursor-pointer">
                             <span>Categorias</span>
@@ -147,7 +147,7 @@
                     </details>
                 <?php endif; ?>
 
-                <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante')): ?>
+                <?php if (isset($_SESSION['login']) && $_SESSION['login'] === true && (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente'))): ?>
                     <details class="group">
                         <summary class="nav-link-mobile flex justify-between items-center list-none cursor-pointer">
                             <span>Puntos de Recepción</span>
@@ -171,7 +171,7 @@
                             </svg>
                         </summary>
                         <div class="pl-4">
-                            <?php if (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante'): ?>
+                            <?php if (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente')): ?>
                                 <a href="/admin/usuarios" class="nav-link-mobile block py-2 text-sm">Ver Usuarios</a>
                                 <a href="/admin/usuarios/crear" class="nav-link-mobile block py-2 text-sm">Agregar Usuario</a>
                             <?php endif; ?>

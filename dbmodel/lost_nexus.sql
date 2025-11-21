@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `lost_nexus` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `lost_nexus`;
--- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: lost_nexus
 -- ------------------------------------------------------
--- Server version	8.0.42
+-- Server version	8.4.6
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -131,6 +131,30 @@ INSERT INTO `tbl_reclamante` VALUES (1,'Jorge','Morales','0013110920024B','','jo
 UNLOCK TABLES;
 
 --
+-- Table structure for table `tbl_rol`
+--
+
+DROP TABLE IF EXISTS `tbl_rol`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tbl_rol` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tbl_rol`
+--
+
+LOCK TABLES `tbl_rol` WRITE;
+/*!40000 ALTER TABLE `tbl_rol` DISABLE KEYS */;
+INSERT INTO `tbl_rol` VALUES (1,'Administrador'),(2,'Estudiante'),(3,'Docente'),(4,'Personal Administrativo'),(5,'Docente');
+/*!40000 ALTER TABLE `tbl_rol` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `tbl_solicitud_revision_camaras`
 --
 
@@ -178,8 +202,11 @@ CREATE TABLE `tbl_usuario` (
   `nombre_usuario` varchar(25) NOT NULL,
   `pwd` varchar(60) NOT NULL,
   `token` varchar(32) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `id_rol` int NOT NULL DEFAULT '2',
+  PRIMARY KEY (`id`),
+  KEY `fk_usuario_rol` (`id_rol`),
+  CONSTRAINT `fk_usuario_rol` FOREIGN KEY (`id_rol`) REFERENCES `tbl_rol` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,9 +215,9 @@ CREATE TABLE `tbl_usuario` (
 
 LOCK TABLES `tbl_usuario` WRITE;
 /*!40000 ALTER TABLE `tbl_usuario` DISABLE KEYS */;
-INSERT INTO `tbl_usuario` VALUES (1,'Admin','Prueba','admin','$2y$12$WFKMk6j4lDd./P/SxZDh0uZrjaR8EITP6qYjmXe2KH22LzwESf4JG',NULL); 
+INSERT INTO `tbl_usuario` VALUES (1,'Admin','Prueba','admin','$2y$12$WFKMk6j4lDd./P/SxZDh0uZrjaR8EITP6qYjmXe2KH22LzwESf4JG',NULL,1),(6,'Luis','Orozco','lorozco','$2y$12$BQ6BP/syZ0Y3ZIiMb.SOue44S8RjeH96FmQAI/hnUS3IU7OwU0EF2','691fe1b2c2fa0',2),(8,'Farit','Mendieta','flamer','$2y$12$HN39nX3BRqgp27tm3QppIuZt8V2ggm12Oy/rsWQnkLxTT3ysBZNjq','691fec7036704',3);
+/* USUARIO admin/admin123*/ /* USUARIO lorozco/memo123*/ /*flamer/flamer123*/ 
 /*!40000 ALTER TABLE `tbl_usuario` ENABLE KEYS */;
-/* USUARIO admin/admin123*/
 UNLOCK TABLES;
 
 --
@@ -234,6 +261,14 @@ LOCK TABLES `tblobjeto` WRITE;
 INSERT INTO `tblobjeto` VALUES (1,'Billetera','Billetera de cuero','2025-06-09 16:11:58',1,'ba0f9ec31bd699930298c0644c775a58.jpg',1,'Perdido','Billetera de cuero',1,NULL,'2025-06-16 21:40:08'),(2,'Reloj','Reloj de pulsera','2025-06-23 15:00:55',1,'dd565613f40a3f45c87d4204db746ca1.jpg',4,'Devuelto','Reloj de pulsera color plateado',NULL,1,'2025-06-23 15:03:15'),(3,'Libro','Libro nuevo encontrado en comedor de colaboradores','2025-06-24 17:53:08',2,'8dae1dc5f5f8869f594e44b8ddd490e2.jpg',4,'Perdido','Libro nuevo encontrado en comedor',1,NULL,NULL),(4,'Botella','Botella transparente de plástico','2025-06-24 20:11:12',1,'a9663841172310eebb02b39682a1a198.jpg',4,'Devuelto','Botella encontrada en mesas',1,1,'2025-06-24 20:17:26'),(5,'Auriculares','Auriculares inalámbricos','2025-06-25 15:09:31',2,'ae11f17f84c1c5e32046254c67efd9b5.jpg',4,'Devuelto','Auriculares inalámbricos color blanco encontrados con su cable de carga en mesas de DIEM',1,1,'2025-06-25 15:30:52');
 /*!40000 ALTER TABLE `tblobjeto` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping events for database 'lost_nexus'
+--
+
+--
+-- Dumping routines for database 'lost_nexus'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -244,4 +279,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-08-14 11:11:09
+-- Dump completed on 2025-11-20 22:40:54

@@ -91,7 +91,9 @@
                         <?php
                             } else {
                                 // Botones "Editar" y "Devolver" para objetos recientes
-                                if (!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante') {
+                                
+                                // Editar: Solo si no es Estudiante NI Docente
+                                if (!isset($_SESSION['rol_nombre']) || ($_SESSION['rol_nombre'] !== 'Estudiante' && $_SESSION['rol_nombre'] !== 'Docente')) {
                         ?>
                                 <a href="/objetosperdidos/editar/<?php echo $objeto->id; ?>" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
                                     <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,14 +102,18 @@
                                     </svg>
                                     Editar
                                 </a>
-                                <?php if ($objeto->estado !== 'devuelto'): ?>
+                        <?php
+                                }
+
+                                // Devolver: Solo si no es Estudiante (Docente puede)
+                                if ((!isset($_SESSION['rol_nombre']) || $_SESSION['rol_nombre'] !== 'Estudiante') && $objeto->estado !== 'devuelto') {
+                        ?>
                                     <a href="/objetosperdidos/devolver/<?php echo $objeto->id; ?>" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                         </svg>
                                         Devolver objeto
                                     </a>
-                                <?php endif; ?>
                         <?php
                                 }
                             }
