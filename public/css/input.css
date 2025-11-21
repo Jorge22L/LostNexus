@@ -26,15 +26,15 @@
 }
 
 .nav-link {
-    @apply text-white hover:text-graphite font-medium uppercase transition-colors duration-300 relative;
+    @apply text-white hover:text-gray-500 font-medium uppercase transition-colors duration-300 relative;
 }
 
 .nav-link-span {
-    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-graphite transition-all duration-300 ease-in-out;
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-gray-500 transition-all duration-300 ease-in-out;
 }
 
 .nav-link-mobile {
-    @apply text-white hover:bg-graphite/50 px-3 py-2 rounded-md text-base font-medium uppercase transition-colors duration-300;
+    @apply text-white hover:bg-gray-500/50 px-3 py-2 rounded-md text-base font-medium uppercase transition-colors duration-300;
 }
 
 @utility animate-slideDown {

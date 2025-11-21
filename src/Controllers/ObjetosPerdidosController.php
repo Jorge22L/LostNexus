@@ -103,6 +103,12 @@ class ObjetosPerdidosController
 
     public static function crear(Router $router)
     {
+        // Verificar permisos: Estudiantes no pueden crear objetos
+        if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === 'Estudiante') {
+            header('Location: /objetosperdidos');
+            exit;
+        }
+
         $alertas = [];
         $objeto = new Objeto();
 
@@ -223,6 +229,12 @@ class ObjetosPerdidosController
 
     public static function editar(Router $router, $id)
     {
+        // Verificar permisos: Estudiantes no pueden editar objetos
+        if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === 'Estudiante') {
+            header('Location: /objetosperdidos');
+            exit;
+        }
+
         // Obtener el objeto existente
         $objeto = Objeto::find($id);
 
@@ -402,7 +414,12 @@ class ObjetosPerdidosController
 
     public static function devolver(Router $router, $id)
     {
-        // Obtener el objeto existente
+        // Verificar permisos: Estudiantes no pueden devolver objetos
+        if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === 'Estudiante') {
+            header('Location: /objetosperdidos');
+            exit;
+        }
+
         // Obtener el objeto existente
         $objeto = Objeto::findWithDetails($id);
 

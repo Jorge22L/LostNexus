@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "concurrently \"bun run --watch ./build.js\" \"npm:tailwind:dev\"",
     "build": "bun run ./build.js",
-    "tailwind:dev": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --watch",
-    "tailwind:build": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --minify"
+    "tailwind:dev": "bunx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --watch",
+    "tailwind:build": "bunx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/main.css --minify"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

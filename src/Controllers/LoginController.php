@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Helpers\CSRF;
 use App\Models\Usuario;
+use App\Models\Rol;
 use App\Router;
 
 class LoginController
@@ -29,6 +30,11 @@ class LoginController
                         $_SESSION['nombre_usuario'] = $usuario->nombre_usuario;
                         $_SESSION['login'] = true;
                         $_SESSION['admin'] = $usuario->nombre_usuario;
+                        
+                        // Guardar rol en sesión
+                        $rol = $usuario->getRol();
+                        $_SESSION['id_rol'] = $usuario->id_rol;
+                        $_SESSION['rol_nombre'] = $rol ? $rol->nombre : null;
 
                         // Regenerar token CSRF después del login
                         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -77,6 +83,7 @@ class LoginController
     public static function crear(Router $router)
     {
         $usuario = new Usuario();
+        $roles = Rol::all();
 
         // Alertas vacías
         $alertas = [];
@@ -86,7 +93,8 @@ class LoginController
                 $alertas['error'][] = 'Token CSRF no válido';
                 $router->render('/login/crear', [
                     'alertas' => $alertas,
-                    'usuario' => $usuario
+                    'usuario' => $usuario,
+                    'roles' => $roles
                 ]);
                 return;
             }
@@ -120,7 +128,8 @@ class LoginController
 
         $router->render('/login/crear', [
             'alertas' => $alertas,
-            'usuario' => $usuario
+            'usuario' => $usuario,
+            'roles' => $roles
         ]);
     }
 
@@ -164,6 +173,7 @@ class LoginController
     {
         // Obtener usuario existente
         $usuario = Usuario::find($id);
+        $roles = Rol::all();
 
         if (!$usuario) {
             header('Location: /admin/usuarios');
@@ -178,7 +188,8 @@ class LoginController
                 $alertas['error'][] = 'Token CSRF no válido';
                 $router->render('/login/editar', [
                     'alertas' => $alertas,
-                    'usuario' => $usuario
+                    'usuario' => $usuario,
+                    'roles' => $roles
                 ]);
                 return;
             }
@@ -202,7 +213,8 @@ class LoginController
 
         $router->render('/login/editar', [
             'alertas' => $alertas,
-            'usuario' => $usuario
+            'usuario' => $usuario,
+            'roles' => $roles
         ]);
     }
 

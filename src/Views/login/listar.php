@@ -41,6 +41,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-(--color-secondary) uppercase tracking-wider">Nombre</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-(--color-secondary) uppercase tracking-wider">Apellido</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-(--color-secondary) uppercase tracking-wider">Usuario</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-(--color-secondary) uppercase tracking-wider">Rol</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-(--color-secondary) uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -51,6 +52,12 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-md text-gray-700"><?php echo htmlspecialchars($usuario->nombre); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-md text-gray-700"><?php echo htmlspecialchars($usuario->apellido); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-md text-gray-700"><?php echo htmlspecialchars($usuario->nombre_usuario); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-md text-gray-700">
+                                    <?php 
+                                        $rol = $usuario->getRol();
+                                        echo $rol ? htmlspecialchars($rol->nombre) : '<span class="text-gray-400">Sin rol</span>';
+                                    ?>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-md text-gray-700">
                                     <div class="flex space-x-3">
                                         <a href="/admin/usuarios/editar/<?php echo $usuario->id; ?>" class="text-(--color-bg) hover:text-(--color-secondary) p-1 rounded hover:bg-(--color-bg)/10 transition-colors">

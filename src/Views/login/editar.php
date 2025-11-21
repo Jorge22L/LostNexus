@@ -61,6 +61,19 @@
                     value="<?php echo htmlspecialchars($usuario->nombre_usuario); ?>"
                     placeholder="Ej: juanperez">
             </div>
+
+            <!-- Campo Rol -->
+            <div>
+                <label for="id_rol" class="block text-gray-700 font-medium mb-1">Rol <span class="text-red-500">*</span></label>
+                <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-300 ease-in-out" name="id_rol" id="id_rol" required>
+                    <option value="" disabled>-- Seleccione un rol --</option>
+                    <?php foreach ($roles as $rol): ?>
+                        <option value="<?php echo $rol->id; ?>" <?php echo $usuario->id_rol == $rol->id ? 'selected' : ''; ?>>
+                            <?php echo $rol->nombre; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <!-- Campo Contraseña -->
             <div>
                 <label class="block text-gray-700 font-medium mb-1" for="pwd">

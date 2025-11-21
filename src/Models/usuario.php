@@ -8,6 +8,7 @@ class Usuario extends ActiveRecord
     protected static $tabla = "tbl_usuario";
     protected static $columnasDB = [
         "id",
+        "id_rol",
         "nombre",
         "apellido",
         "nombre_usuario",
@@ -16,6 +17,7 @@ class Usuario extends ActiveRecord
     ];
 
     public $id;
+    public $id_rol;
     public $nombre;
     public $apellido;
     public $nombre_usuario;
@@ -25,6 +27,7 @@ class Usuario extends ActiveRecord
     public function __construct($args = [])
     {
         $this->id = $args["id"] ?? null;
+        $this->id_rol = $args["id_rol"] ?? null;
         $this->nombre = $args["nombre"] ?? '';
         $this->apellido = $args["apellido"] ?? '';
         $this->nombre_usuario = $args["nombre_usuario"] ?? '';
@@ -48,6 +51,10 @@ class Usuario extends ActiveRecord
 
         if (!$this->pwd || strlen($this->pwd) < 6) {
             self::$alertas['error'][] = 'El password es obligatorio y debe tener al menos 6 caracteres';
+        }
+
+        if (!$this->id_rol) {
+            self::$alertas['error'][] = 'El rol es obligatorio';
         }
 
         return self::$alertas;
@@ -168,5 +175,12 @@ class Usuario extends ActiveRecord
         $fila = $resultado->fetch_assoc();
 
         return (int)$fila['total'];
+    }
+    public function getRol()
+    {
+        if ($this->id_rol) {
+            return Rol::find($this->id_rol);
+        }
+        return null;
     }
 }
