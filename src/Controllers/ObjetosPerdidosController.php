@@ -14,6 +14,28 @@ use Exception;
 
 class ObjetosPerdidosController
 {
+
+    public function __construct()
+    {
+        $this->configurarUploadTmpDir();
+    }
+
+    private function configurarUploadTmpDir()
+    {
+        $tempDir = sys_get_temp_dir() . '/php-uploads';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+
+        ini_set('upload_tmp_dir', $tempDir);
+
+
+        if (ini_get('upload_tmp_dir') !== $tempDir) {
+            error_log("ERROR: No se pudo configurar upload_tmp_dir");
+        }
+    }
+
     public static function index(Router $router)
     {
         $filtros = [
@@ -84,6 +106,9 @@ class ObjetosPerdidosController
         $alertas = [];
         $objeto = new Objeto();
 
+        // SOLUCIÓN: Verificar configuración de subida al inicio
+        self::verificarConfiguracionUpload($alertas);
+
         // Obtener categorias
         $categorias = Categoria::all();
 
@@ -101,6 +126,13 @@ class ObjetosPerdidosController
                     'puntosRecepcion' => $puntosRecepcion
                 ]);
             }
+
+            // SOLUCIÓN: Verificar error de subida antes de procesar
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+                $errorMsg = self::getUploadError($_FILES['foto']['error']);
+                $alertas['error'][] = "Error al subir imagen: " . $errorMsg;
+            }
+
             // Procesar los datos del formulario
             $datos = $_POST;
 
@@ -123,25 +155,46 @@ class ObjetosPerdidosController
 
             if (empty($alertas['error'])) {
                 /** Subida de archivos */
-                $carpeta = __DIR__ . '../../../public/imagenes/';
+                $carpeta = '/var/www/lost_nexus/public/imagenes/';
+
+                // SOLUCIÓN: Crear directorio si no existe con permisos
                 if (!is_dir($carpeta)) {
-                    mkdir($carpeta);
+                    if (!mkdir($carpeta, 0755, true)) {
+                        $alertas['error'][] = 'No se pudo crear el directorio de imágenes';
+                    }
                 }
 
-                // Generar un nombre único para la imagen
-                $nombreImagen = md5(uniqid(rand(), true)) . ".jpg";
+                if (empty($alertas['error'])) {
+                    // Generar un nombre único para la imagen
+                    $nombreImagen = md5(uniqid(rand(), true)) . ".jpg";
 
-                // Subir la imagen
-                move_uploaded_file($imagen['tmp_name'], $carpeta . $nombreImagen);
+                    // SOLUCIÓN: Verificar que el archivo temporal existe antes de moverlo
+                    if (!file_exists($imagen['tmp_name'])) {
+                        $alertas['error'][] = 'El archivo temporal no existe. Error de configuración del servidor.';
+                    } else {
+                        // Subir la imagen
+                        if (move_uploaded_file($imagen['tmp_name'], $carpeta . $nombreImagen)) {
+                            $objeto->foto = $nombreImagen;
+                            $resultado = $objeto->guardar();
 
-                $objeto->foto = $nombreImagen;
-
-                $resultado = $objeto->guardar();
-                if ($resultado) {
-                    header('Location: /objetosperdidos');
-                    exit;
-                } else {
-                    $alertas['error'][] = 'Error al guardar el objeto';
+                            if ($resultado) {
+                                header('Location: /objetosperdidos');
+                                exit;
+                            } else {
+                                $alertas['error'][] = 'Error al guardar el objeto';
+                                // Eliminar imagen si falló el guardado
+                                if (file_exists($carpeta . $nombreImagen)) {
+                                    unlink($carpeta . $nombreImagen);
+                                }
+                            }
+                        } else {
+                            $alertas['error'][] = 'Error al mover el archivo subido';
+                            $error = error_get_last();
+                            if ($error) {
+                                $alertas['error'][] = $error['message'];
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -185,8 +238,11 @@ class ObjetosPerdidosController
         }
 
         $alertas = [];
-        $carpeta = __DIR__ . '../../../public/imagenes/';
+        $carpeta = '/var/www/lost_nexus/public/imagenes/';
         $imagenAnterior = $objeto->foto;
+
+        // SOLUCIÓN: Verificar configuración
+        self::verificarConfiguracionUpload($alertas);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validar CSRF
@@ -200,6 +256,13 @@ class ObjetosPerdidosController
                 ]);
                 return;
             }
+
+            // SOLUCIÓN: Verificar error de subida
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_OK && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $errorMsg = self::getUploadError($_FILES['foto']['error']);
+                $alertas['error'][] = "Error al subir imagen: " . $errorMsg;
+            }
+
             // Sincronizar con datos del formulario
             $objeto->sincronizar($_POST);
 
@@ -220,14 +283,15 @@ class ObjetosPerdidosController
                     $nombreImagen = md5(uniqid(rand(), true)) . ".jpg";
 
                     // Subir la imagen (sin validaciones adicionales)
-                    move_uploaded_file($imagen['tmp_name'], $carpeta . $nombreImagen);
-
-                    // Eliminar imagen anterior si existe
-                    if ($imagenAnterior && file_exists($carpeta . $imagenAnterior)) {
-                        unlink($carpeta . $imagenAnterior);
+                    if (move_uploaded_file($imagen['tmp_name'], $carpeta . $nombreImagen)) {
+                        // Eliminar imagen anterior si existe
+                        if ($imagenAnterior && file_exists($carpeta . $imagenAnterior)) {
+                            unlink($carpeta . $imagenAnterior);
+                        }
+                        $objeto->foto = $nombreImagen;
+                    } else {
+                        $alertas['error'][] = 'Error al mover el archivo subido';
                     }
-
-                    $objeto->foto = $nombreImagen;
                 }
             }
 
@@ -250,6 +314,7 @@ class ObjetosPerdidosController
             'puntosRecepcion' => $puntosRecepcion
         ]);
     }
+
 
     public static function archivados(Router $router)
     {
@@ -338,7 +403,7 @@ class ObjetosPerdidosController
     public static function devolver(Router $router, $id)
     {
         // Obtener el objeto existente
-        // Buscar el objeto en la base de datos
+        // Obtener el objeto existente
         $objeto = Objeto::findWithDetails($id);
 
         if (!$objeto) {
@@ -347,11 +412,16 @@ class ObjetosPerdidosController
         }
 
         $alertas = [];
-        $carpeta = __DIR__ . '../../../public/evidencia/';
+        $carpeta = '/var/www/lost_nexus/public/evidencia/';
+
+        // SOLUCIÓN: Verificar configuración
+        self::verificarConfiguracionUpload($alertas);
 
         // Verificar y crear directorio si no existe
         if (!is_dir($carpeta)) {
-            mkdir($carpeta, 0755, true);
+            if (!mkdir($carpeta, 0755, true)) {
+                $alertas['error'][] = 'No se pudo crear el directorio de evidencia';
+            }
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -364,6 +434,13 @@ class ObjetosPerdidosController
                 ]);
                 return;
             }
+
+            // SOLUCIÓN: Verificar error de subida
+            if (isset($_FILES['evidencia']) && $_FILES['evidencia']['error'] !== UPLOAD_ERR_OK) {
+                $errorMsg = self::getUploadError($_FILES['evidencia']['error']);
+                $alertas['error'][] = "Error al subir evidencia: " . $errorMsg;
+            }
+
             // 1. Validar que el usuario_atiende existe y es numérico
             if (!isset($_SESSION['id']) || !is_numeric($_SESSION['id'])) {
                 $alertas['error'][] = 'No se pudo identificar al usuario que realiza la devolución';
@@ -406,68 +483,127 @@ class ObjetosPerdidosController
                     $evidencia = md5(uniqid(rand(), true)) . ".jpg";
                     if (!move_uploaded_file($imagen['tmp_name'], $carpeta . $evidencia)) {
                         $alertas['error'][] = 'Error al guardar la evidencia';
+                        $error = error_get_last();
+                        if ($error) {
+                            $alertas['error'][] = $error['message'];
+                        }
                     }
                 }
             }
 
             // 5. Guardar si no hay errores
             if (empty($alertas['error'])) {
-                    // Guardar datos del dueño o reclamante
-                    $resultado = $reclamante->guardar();
+                // Guardar datos del dueño o reclamante
+                $resultado = $reclamante->guardar();
 
-                    if ($resultado['resultado']) {
-                        $reclamacion = new Reclamacion([
-                            'idobjeto' => $objeto->id,
-                            'idreclamante' => $resultado['id'],
-                            'fecha_reclamacion' => date('Y-m-d H:i:s'),
-                            'observaciones' => trim($_POST['observaciones']),
-                            'usuario_atiende' => $usuarioAtiende, // Usamos el ID de sesión validado
-                            'evidencia' => $evidencia
-                        ]);
+                if ($resultado['resultado']) {
+                    $reclamacion = new Reclamacion([
+                        'idobjeto' => $objeto->id,
+                        'idreclamante' => $resultado['id'],
+                        'fecha_reclamacion' => date('Y-m-d H:i:s'),
+                        'observaciones' => trim($_POST['observaciones']),
+                        'usuario_atiende' => $usuarioAtiende, // Usamos el ID de sesión validado
+                        'evidencia' => $evidencia
+                    ]);
 
-                        // Validar reclamación
-                        $alertasReclamacion = $reclamacion->validarReclamacion();
+                    // Validar reclamación
+                    $alertasReclamacion = $reclamacion->validarReclamacion();
 
-                        if (empty($alertasReclamacion['error'])) {
-                            // Guardar la reclamación
-                            $resultadoReclamacion = $reclamacion->guardar();
+                    if (empty($alertasReclamacion['error'])) {
+                        // Guardar la reclamación
+                        $resultadoReclamacion = $reclamacion->guardar();
 
-                            if ($resultadoReclamacion['resultado']) {
-                                // Actualizando estado del objeto a Devuelto
-                                $objeto->estado = 'Devuelto';
-                                $objeto->fecha_devolucion = date('Y-m-d H:i:s');
-                                $objeto->usuario_devuelve = $usuarioAtiende;
-                                $resultadoActualizacion = $objeto->actualizar();
+                        if ($resultadoReclamacion['resultado']) {
+                            // Actualizando estado del objeto a Devuelto
+                            $objeto->estado = 'Devuelto';
+                            $objeto->fecha_devolucion = date('Y-m-d H:i:s');
+                            $objeto->usuario_devuelve = $usuarioAtiende;
+                            $resultadoActualizacion = $objeto->actualizar();
 
-                                if ($resultadoActualizacion) {
-                                    header('Location: /objetosdevueltos/ver/' . $objeto->id);
-                                    exit;
-                                } else {
-                                    $alertas['error'][] = 'Error al actualizar el estado del objeto';
-                                }
+                            if ($resultadoActualizacion) {
+                                header('Location: /objetosdevueltos/ver/' . $objeto->id);
+                                exit;
                             } else {
-                                $alertas['error'][] = 'Error al guardar la reclamación';
-                                // Eliminar imagen si falló
-                                if (file_exists($carpeta . $evidencia)) {
-                                    unlink($carpeta . $evidencia);
-                                }
+                                $alertas['error'][] = 'Error al actualizar el estado del objeto';
                             }
                         } else {
-                            $alertas['error'] = array_merge($alertas['error'], $alertasReclamacion['error']);
-                            // Eliminar imagen si hay errores de validación
-                            if ($evidencia && file_exists($carpeta . $evidencia)) {
+                            $alertas['error'][] = 'Error al guardar la reclamación';
+                            // Eliminar imagen si falló
+                            if (file_exists($carpeta . $evidencia)) {
                                 unlink($carpeta . $evidencia);
                             }
                         }
                     } else {
-                        $alertas['error'][] = 'Error al registrar el reclamante';
+                        $alertas['error'] = array_merge($alertas['error'], $alertasReclamacion['error']);
+                        // Eliminar imagen si hay errores de validación
+                        if ($evidencia && file_exists($carpeta . $evidencia)) {
+                            unlink($carpeta . $evidencia);
+                        }
                     }
+                } else {
+                    $alertas['error'][] = 'Error al registrar el reclamante';
                 }
             }
+        }
 
         $router->render('/objetosperdidos/devolucion', [
             'alertas' => $alertas,
             'objeto' => $objeto
         ]);
+    }
+
+    private static function verificarConfiguracionUpload(&$alertas)
+    {
+        // Directorio temporal dentro del proyecto - CORREGIDO
+        $tempDir = '/var/www/lost_nexus/tmp';
+
+        if (!is_dir($tempDir)) {
+            if (!mkdir($tempDir, 0755, true)) {
+                $alertas['error'][] = 'No se pudo crear directorio temporal en: ' . $tempDir;
+                error_log("ERROR: No se pudo crear directorio temporal: " . $tempDir);
+                return false;
+            }
+        }
+
+        // Configurar PHP para usar este directorio
+        ini_set('upload_tmp_dir', $tempDir);
+
+        // Verificar que se configuró correctamente
+        $configuredDir = ini_get('upload_tmp_dir');
+        if ($configuredDir !== $tempDir) {
+            error_log("ADVERTENCIA: upload_tmp_dir no se configuró. Esperado: $tempDir, Actual: $configuredDir");
+        }
+
+        // Verificar permisos de escritura
+        if (!is_writable($tempDir)) {
+            $alertas['error'][] = 'Directorio temporal no tiene permisos de escritura: ' . $tempDir;
+            error_log("ERROR: Directorio temporal no escribible: " . $tempDir);
+            return false;
+        }
+
+        // Verificar que file_uploads esté habilitado
+        if (!ini_get('file_uploads')) {
+            $alertas['error'][] = 'File uploads están deshabilitados en PHP';
+            return false;
+        }
+
+        error_log("Configuración upload correcta. Temp dir: " . $tempDir);
+        return true;
+    }
+
+    private static function getUploadError($errorCode)
+    {
+        $uploadErrors = [
+            UPLOAD_ERR_OK => 'No hay error',
+            UPLOAD_ERR_INI_SIZE => 'Tamaño excede upload_max_filesize',
+            UPLOAD_ERR_FORM_SIZE => 'Tamaño excede MAX_FILE_SIZE',
+            UPLOAD_ERR_PARTIAL => 'Archivo parcialmente subido',
+            UPLOAD_ERR_NO_FILE => 'No se subió ningún archivo',
+            UPLOAD_ERR_NO_TMP_DIR => 'Falta carpeta temporal',
+            UPLOAD_ERR_CANT_WRITE => 'Fallo escritura en disco',
+            UPLOAD_ERR_EXTENSION => 'Una extensión de PHP detuvo la subida'
+        ];
+
+        return $uploadErrors[$errorCode] ?? 'Error desconocido';
     }
 }

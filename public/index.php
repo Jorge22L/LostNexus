@@ -11,6 +11,12 @@ use App\Utils\Logger;
 
 require_once __DIR__ . '/../includes/app.php';
 
+$tempDir = sys_get_temp_dir() . '/php-uploads';
+if (!is_dir($tempDir)) {
+    mkdir($tempDir, 0777, true);
+}
+ini_set('upload_tmp_dir', $tempDir);
+
 $router = new Router();
 
 // Logger
