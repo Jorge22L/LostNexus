@@ -11,13 +11,13 @@ class Router
 
     public function __construct()
     {
-        // Solo iniciar sesión si se accede a una ruta protegida o si se requiere CSRF
+        // Solo iniciar sesi�n si se accede a una ruta protegida o si se requiere CSRF
         $path = $_SERVER['PATH_INFO'] ?? strtok($_SERVER['REQUEST_URI'], '?') ?? '/';
         $method = $_SERVER['REQUEST_METHOD'];
 
         $isProtected = isset($this->rutasProtegidas[$method][$path]);
 
-        // Iniciar sesión solo si se requiere
+        // Iniciar sesi�n solo si se requiere
         if ($isProtected || $method === 'POST' || isset($_COOKIE['lost_nexus'])) {
             if (session_status() === PHP_SESSION_NONE) {
                 session_name('lost_nexus');
@@ -48,7 +48,7 @@ class Router
 
     public function estaAutenticado()
     {
-        // Verifica si hay una sesión activa con nuestro nombre
+        // Verifica si hay una sesi�n activa con nuestro nombre
         if (session_status() === PHP_SESSION_ACTIVE && session_name() === 'lost_nexus') {
             return isset($_SESSION['login']) && $_SESSION['login'] === true;
         }
@@ -62,7 +62,7 @@ class Router
             return true;
         }
 
-        // Verificar rutas con parámetros
+        // Verificar rutas con par�metros
         foreach ($this->rutasProtegidas[$method] ?? [] as $route => $isProtected) {
             if (strpos($route, '{') !== false) {
                 $pattern = "@^" . preg_replace('/\{[^}]+\}/', '([^/]+)', $route) . "$@";
@@ -99,11 +99,14 @@ class Router
                     $pattern = "@^" . preg_replace('/\{([^\}]+)\}/', '([^/]+)', $route) . "$@";
                     if (preg_match($pattern, $currentUrl, $matches)) {
                         array_shift($matches);
-                        call_user_func_array($fn, array_merge([$this], $matches));
+                        
+                        // CORRECCI�N: Manejar m�todos est�ticos y de instancia
+                        $this->ejecutarControlador($fn, $matches);
                         return;
                     }
                 } elseif ($route === $currentUrl) {
-                    call_user_func($fn, $this);
+                    // CORRECCI�N: Manejar m�todos est�ticos y de instancia
+                    $this->ejecutarControlador($fn);
                     return;
                 }
             }
@@ -131,10 +134,48 @@ class Router
                 http_response_code(500);
             }
 
-            exit; // Silenciosamente termina sin generar HTML
+            exit;
         }
     }
 
+    /**
+     * CORRECCI�N CR�TICA: Ejecutar controladores est�ticos y de instancia
+     */
+    private function ejecutarControlador($fn, $params = [])
+    {
+        if (is_array($fn)) {
+            // Es un array [ClassName, 'methodName']
+            list($class, $method) = $fn;
+            
+            // Verificar si el m�todo es est�tico
+            $reflection = new \ReflectionMethod($class, $method);
+            if ($reflection->isStatic()) {
+                // M�todo est�tico: llamar directamente
+                if ($params) {
+                    call_user_func_array([$class, $method], array_merge([$this], $params));
+                } else {
+                    call_user_func([$class, $method], $this);
+                }
+            } else {
+                // M�todo de instancia: crear objeto primero
+                $instance = new $class();
+                if ($params) {
+                    call_user_func_array([$instance, $method], array_merge([$this], $params));
+                } else {
+                    call_user_func([$instance, $method], $this);
+                }
+            }
+        } elseif (is_callable($fn)) {
+            // Funci�n an�nima o callable
+            if ($params) {
+                call_user_func_array($fn, array_merge([$this], $params));
+            } else {
+                call_user_func($fn, $this);
+            }
+        } else {
+            throw new \Exception("Controlador no v�lido: " . gettype($fn));
+        }
+    }
 
     protected function validarCSRF()
     {
@@ -164,7 +205,7 @@ class Router
     }
 
     /**
-     * Habilita o deshabilita la protección CSRF para rutas específicas
+     * Habilita o deshabilita la protecci�n CSRF para rutas espec�ficas
      */
     public function withoutCsrfProtection(): self
     {
@@ -178,12 +219,12 @@ class Router
 
         if ($this->estaAutenticado()) {
             $this->render('error/404', [
-                'mensaje' => 'Página no encontrada',
+                'mensaje' => 'P�gina no encontrada',
                 'redireccion' => '/objetosperdidos'
             ]);
         } else {
             $this->render('error/404', [
-                'mensaje' => 'Página no encontrada',
+                'mensaje' => 'P�gina no encontrada',
                 'redireccion' => '/login'
             ]);
         }
@@ -198,7 +239,7 @@ class Router
             $$key = $value;
         }
 
-        // Corrección en rutas
+        // Correcci�n en rutas
         $viewsPath = __DIR__ . '/Views/';
         $view = ltrim($view, '/');
         $viewFile = $viewsPath . "$view.php";

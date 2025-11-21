@@ -1,4 +1,17 @@
 <?php
+// public/index.php - VERSIÓN COMPATIBLE CON NGINX
+
+// PATCH CRÍTICO: Compatibilidad entre Nginx y tu Router
+// Tu router espera PATH_INFO o REQUEST_URI, pero Nginx pasa la ruta en $_GET['url']
+if (isset($_GET['url']) && $_GET['url'] !== '') {
+    $url = $_GET['url'];
+    // Normalizar la URL
+    if ($url !== '/' && substr($url, -1) === '/') {
+        $url = rtrim($url, '/');
+    }
+    $_SERVER['REQUEST_URI'] = $url;
+    $_SERVER['PATH_INFO'] = $url;
+}
 
 use App\Controllers\CategoriasController;
 use App\Controllers\HomeController;
@@ -23,7 +36,7 @@ $router = new Router();
 Logger::register();
 
 // HomePage
-$router->get('/', [HomeController::class, 'index']);
+$router->get('/home', [HomeController::class, 'index']);
 
 // Objetos Perdidos
 $router->get('/objetosperdidos', [ObjetosPerdidosController::class, 'index']);

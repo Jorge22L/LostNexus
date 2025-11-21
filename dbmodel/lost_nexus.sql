@@ -188,7 +188,7 @@ CREATE TABLE `tbl_usuario` (
 
 LOCK TABLES `tbl_usuario` WRITE;
 /*!40000 ALTER TABLE `tbl_usuario` DISABLE KEYS */;
-INSERT INTO `tbl_usuario` VALUES (1,'Admin','Prueba','admin','$2y$12$r4A.9yH1zWqkK8JmNcBdOeWlVXpQ7sT2uYvZxP3C6R8M0nLb5Gt',NULL); 
+INSERT INTO `tbl_usuario` VALUES (1,'Admin','Prueba','admin','$2y$12$WFKMk6j4lDd./P/SxZDh0uZrjaR8EITP6qYjmXe2KH22LzwESf4JG',NULL); 
 /*!40000 ALTER TABLE `tbl_usuario` ENABLE KEYS */;
 /* USUARIO admin/admin123*/
 UNLOCK TABLES;
