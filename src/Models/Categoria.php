@@ -73,5 +73,6 @@ class Categoria extends ActiveRecord
         $fila = $resultado->fetch_assoc();
 
         return (int)$fila['total'];
+        
     }
 }

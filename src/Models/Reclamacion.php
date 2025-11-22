@@ -62,5 +62,6 @@ class Reclamacion extends ActiveRecord
         }
 
         return self::$alertas;
+        
     }
 }

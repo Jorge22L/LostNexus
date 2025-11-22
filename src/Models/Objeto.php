@@ -409,5 +409,6 @@ class Objeto extends ActiveRecord
 
         $resultado = self::consultarSQL($query, $params);
         return $resultado[0]->total ?? 0;
+        
     }
 }

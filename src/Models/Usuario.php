@@ -184,3 +184,4 @@ class Usuario extends ActiveRecord
         return null;
     }
 }
+
