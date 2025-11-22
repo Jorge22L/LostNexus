@@ -36,7 +36,7 @@ $router = new Router();
 Logger::register();
 
 // raiz
-$router->get('/', [HomeController::class, 'index']);
+$router->get('/', [LoginController::class, 'login']);
 
 // HomePage
 $router->get('/home', [HomeController::class, 'index']);

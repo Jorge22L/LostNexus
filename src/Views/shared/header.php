@@ -13,7 +13,7 @@
         <div class="mx-auto flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8 max-w-7xl">
             <!-- Logo -->
             <div class="flex items-center">
-                <a href="/" class="flex items-center">
+                <a href="/home" class="flex items-center">
                     <img class="h-8 w-auto sm:h-10 md:h-12 lg:h-14 transition-all duration-300 hover:scale-105"
                         src="/img/lost_found.png" alt="Logo">
                 </a>
