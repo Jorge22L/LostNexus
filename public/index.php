@@ -1,17 +1,34 @@
 <?php
-// public/index.php - VERSIÓN COMPATIBLE CON NGINX
+// public/index.php - VERSIÓN COMPATIBLE CON NGINX - CORREGIDA
 
-// PATCH CRÍTICO: Compatibilidad entre Nginx y tu Router
-// Tu router espera PATH_INFO o REQUEST_URI, pero Nginx pasa la ruta en $_GET['url']
+// PATCH CRÍTICO MEJORADO: Compatibilidad entre Nginx y tu Router
+$currentUrl = '/';
+
+// PRIMERO: Intentar obtener de $_GET['url'] (configuración actual de Nginx)
 if (isset($_GET['url']) && $_GET['url'] !== '') {
-    $url = $_GET['url'];
-    // Normalizar la URL
-    if ($url !== '/' && substr($url, -1) === '/') {
-        $url = rtrim($url, '/');
-    }
-    $_SERVER['REQUEST_URI'] = $url;
-    $_SERVER['PATH_INFO'] = $url;
+    $currentUrl = $_GET['url'];
+} 
+// SEGUNDO: Fallback a PATH_INFO si está disponible
+elseif (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '') {
+    $currentUrl = $_SERVER['PATH_INFO'];
+} 
+// TERCERO: Fallback a REQUEST_URI
+elseif (isset($_SERVER['REQUEST_URI'])) {
+    $requestUri = $_SERVER['REQUEST_URI'];
+    // Remover query string si existe
+    $parsed = parse_url($requestUri);
+    $currentUrl = $parsed['path'] ?? '/';
 }
+
+// Normalizar la URL
+$currentUrl = rtrim($currentUrl, '/');
+if ($currentUrl === '') {
+    $currentUrl = '/';
+}
+
+// Configurar para el router
+$_SERVER['REQUEST_URI'] = $currentUrl;
+$_SERVER['PATH_INFO'] = $currentUrl;
 
 use App\Controllers\CategoriasController;
 use App\Controllers\HomeController;
