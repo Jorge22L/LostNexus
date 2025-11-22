@@ -36,7 +36,15 @@ $router = new Router();
 Logger::register();
 
 // raiz
-$router->get('/', [LoginController::class, 'login']);
+// raiz
+$router->get('/', function($router) {
+    if ($router->estaAutenticado()) {
+        header('Location: /objetosperdidos');
+    } else {
+        header('Location: /login');
+    }
+    exit;
+});
 
 // HomePage
 $router->get('/home', [HomeController::class, 'index']);
