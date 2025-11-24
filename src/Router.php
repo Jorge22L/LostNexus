@@ -11,21 +11,63 @@ class Router
 
     public function __construct()
     {
-        // Solo iniciar sesi�n si se accede a una ruta protegida o si se requiere CSRF
-        $path = $_SERVER['PATH_INFO'] ?? strtok($_SERVER['REQUEST_URI'], '?') ?? '/';
+        $this->iniciarSesion();
+    }
+
+    private function iniciarSesion()
+    {
+        // Si ya hay una sesión activa, no hacer nada
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        // Siempre iniciar sesión si hay una cookie de sesión existente
+        if (isset($_COOKIE['lost_nexus'])) {
+            session_name('lost_nexus');
+            session_start();
+            
+            if (!isset($_SESSION['csrf_token'])) {
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            }
+            return;
+        }
+
+        $currentUrl = $_SERVER['PATH_INFO'] ?? strtok($_SERVER['REQUEST_URI'], '?') ?? '/';
         $method = $_SERVER['REQUEST_METHOD'];
+        
+        // Rutas que NO necesitan sesión automáticamente (GET)
+        $rutasSinSesion = [
+            '/login',
+            '/'
+        ];
 
-        $isProtected = isset($this->rutasProtegidas[$method][$path]);
+        // Rutas que SIEMPRE necesitan sesión (excepto login GET)
+        $rutasConSesion = [
+            '/logout',
+            '/admin/usuarios',
+            '/objetosperdidos',
+            '/login/crear',
+            '/login/listar',
+            '/login/editar'
+        ];
 
-        // Iniciar sesi�n solo si se requiere
-        if ($isProtected || $method === 'POST' || isset($_COOKIE['lost_nexus'])) {
-            if (session_status() === PHP_SESSION_NONE) {
-                session_name('lost_nexus');
-                session_start();
+        // Iniciar sesión para:
+        // 1. Cualquier método POST
+        // 2. Rutas específicas que necesitan sesión
+        // 3. Rutas protegidas (excepto login GET)
+        // 4. NO iniciar para login GET y raíz
+        
+        $necesitaSesion = 
+            ($method === 'POST') ||
+            in_array($currentUrl, $rutasConSesion) ||
+            ($this->rutaEstaProtegida($method, $currentUrl) && !($currentUrl === '/login' && $method === 'GET'));
 
-                if (!isset($_SESSION['csrf_token'])) {
-                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                }
+        if ($necesitaSesion) {
+            session_name('lost_nexus');
+            session_start();
+            
+            if (!isset($_SESSION['csrf_token'])) {
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             }
         }
     }
@@ -48,7 +90,7 @@ class Router
 
     public function estaAutenticado()
     {
-        // Verifica si hay una sesi�n activa con nuestro nombre
+        // Verifica si hay una sesión activa con nuestro nombre
         if (session_status() === PHP_SESSION_ACTIVE && session_name() === 'lost_nexus') {
             return isset($_SESSION['login']) && $_SESSION['login'] === true;
         }
@@ -62,7 +104,7 @@ class Router
             return true;
         }
 
-        // Verificar rutas con par�metros
+        // Verificar rutas con parámetros
         foreach ($this->rutasProtegidas[$method] ?? [] as $route => $isProtected) {
             if (strpos($route, '{') !== false) {
                 $pattern = "@^" . preg_replace('/\{[^}]+\}/', '([^/]+)', $route) . "$@";
@@ -81,13 +123,20 @@ class Router
             $currentUrl = $_SERVER['PATH_INFO'] ?? strtok($_SERVER['REQUEST_URI'], '?') ?? '/';
             $method = $_SERVER['REQUEST_METHOD'];
 
+            // Verificar autenticación para rutas protegidas
             if ($this->rutaEstaProtegida($method, $currentUrl)) {
                 if (!$this->estaAutenticado()) {
-                    header('Location: /login');
-                    exit;
+                    // Permitir acceso a login sin autenticación solo para GET
+                    if ($currentUrl === '/login' && $method === 'GET') {
+                        // Continuar normalmente al login
+                    } else {
+                        header('Location: /login');
+                        exit;
+                    }
                 }
             }
 
+            // Validar CSRF para POST en rutas protegidas
             if ($method === 'POST' && $this->rutaEstaProtegida($method, $currentUrl)) {
                 $this->validarCSRF();
             }
@@ -100,12 +149,12 @@ class Router
                     if (preg_match($pattern, $currentUrl, $matches)) {
                         array_shift($matches);
                         
-                        // CORRECCI�N: Manejar m�todos est�ticos y de instancia
+                        // Manejar métodos estáticos y de instancia
                         $this->ejecutarControlador($fn, $matches);
                         return;
                     }
                 } elseif ($route === $currentUrl) {
-                    // CORRECCI�N: Manejar m�todos est�ticos y de instancia
+                    // Manejar métodos estáticos y de instancia
                     $this->ejecutarControlador($fn);
                     return;
                 }
@@ -139,7 +188,7 @@ class Router
     }
 
     /**
-     * CORRECCI�N CR�TICA: Ejecutar controladores est�ticos y de instancia
+     * Ejecutar controladores estáticos y de instancia
      */
     private function ejecutarControlador($fn, $params = [])
     {
@@ -147,17 +196,17 @@ class Router
             // Es un array [ClassName, 'methodName']
             list($class, $method) = $fn;
             
-            // Verificar si el m�todo es est�tico
+            // Verificar si el método es estático
             $reflection = new \ReflectionMethod($class, $method);
             if ($reflection->isStatic()) {
-                // M�todo est�tico: llamar directamente
+                // Método estático: llamar directamente
                 if ($params) {
                     call_user_func_array([$class, $method], array_merge([$this], $params));
                 } else {
                     call_user_func([$class, $method], $this);
                 }
             } else {
-                // M�todo de instancia: crear objeto primero
+                // Método de instancia: crear objeto primero
                 $instance = new $class();
                 if ($params) {
                     call_user_func_array([$instance, $method], array_merge([$this], $params));
@@ -166,14 +215,14 @@ class Router
                 }
             }
         } elseif (is_callable($fn)) {
-            // Funci�n an�nima o callable
+            // Función anónima o callable
             if ($params) {
                 call_user_func_array($fn, array_merge([$this], $params));
             } else {
                 call_user_func($fn, $this);
             }
         } else {
-            throw new \Exception("Controlador no v�lido: " . gettype($fn));
+            throw new \Exception("Controlador no válido: " . gettype($fn));
         }
     }
 
@@ -205,7 +254,7 @@ class Router
     }
 
     /**
-     * Habilita o deshabilita la protecci�n CSRF para rutas espec�ficas
+     * Habilita o deshabilita la protección CSRF para rutas específicas
      */
     public function withoutCsrfProtection(): self
     {
@@ -219,12 +268,12 @@ class Router
 
         if ($this->estaAutenticado()) {
             $this->render('error/404', [
-                'mensaje' => 'P�gina no encontrada',
+                'mensaje' => 'Página no encontrada',
                 'redireccion' => '/objetosperdidos'
             ]);
         } else {
             $this->render('error/404', [
-                'mensaje' => 'P�gina no encontrada',
+                'mensaje' => 'Página no encontrada',
                 'redireccion' => '/login'
             ]);
         }
@@ -239,7 +288,7 @@ class Router
             $$key = $value;
         }
 
-        // Correcci�n en rutas
+        // Corrección en rutas
         $viewsPath = __DIR__ . '/Views/';
         $view = ltrim($view, '/');
         $viewFile = $viewsPath . "$view.php";

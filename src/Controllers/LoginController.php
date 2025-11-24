@@ -10,55 +10,69 @@ use App\Router;
 class LoginController
 {
     public static function login(Router $router)
-    {
-        $alertas = [];
+{
+    // Forzar inicio de sesión si no está activa
+    if (session_status() === PHP_SESSION_NONE) {
+        session_name('lost_nexus');
+        session_start();
+    }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $auth = new Usuario($_POST);
-            $alertas = $auth->validarLogin();
+    $alertas = [];
 
-            if (empty($alertas['error'])) {
-                $usuario = Usuario::whereFirst('nombre_usuario', $auth->nombre_usuario);
-
-                if ($usuario !== null) {
-                    if ($usuario->comprobarPasswordAndVerificado($auth->pwd)) {
-                        // Regenerar el ID de sesión despúes del login exitoso
-                        session_regenerate_id();
-
-                        $_SESSION['id'] = $usuario->id;
-                        $_SESSION['nombre'] = $usuario->nombre . " " . $usuario->apellido;
-                        $_SESSION['nombre_usuario'] = $usuario->nombre_usuario;
-                        $_SESSION['login'] = true;
-                        $_SESSION['admin'] = $usuario->nombre_usuario;
-                        
-                        // Guardar rol en sesión
-                        $rol = $usuario->getRol();
-                        $_SESSION['id_rol'] = $usuario->id_rol;
-                        $_SESSION['rol_nombre'] = $rol ? $rol->nombre : null;
-
-                        // Regenerar token CSRF después del login
-                        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-
-                        header('Location: /objetosperdidos');
-                        exit;
-                    }
-                } else {
-                    $alertas['error'][] = 'Usuario no encontrado';
-                }
-            }
-
-            $alertas = array_merge($alertas, Usuario::getAlertas());
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Asegurar token CSRF
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
-        $router->render('/login/login', [
-            'alertas' => $alertas
-        ]);
+        $auth = new Usuario($_POST);
+        $alertas = $auth->validarLogin();
+
+        if (empty($alertas['error'])) {
+            $usuario = Usuario::whereFirst('nombre_usuario', $auth->nombre_usuario);
+
+            if ($usuario !== null) {
+                if ($usuario->comprobarPasswordAndVerificado($auth->pwd)) {
+                    // Regenerar el ID de sesión después del login exitoso
+                    session_regenerate_id(true);
+
+                    $_SESSION['id'] = $usuario->id;
+                    $_SESSION['nombre'] = $usuario->nombre . " " . $usuario->apellido;
+                    $_SESSION['nombre_usuario'] = $usuario->nombre_usuario;
+                    $_SESSION['login'] = true;
+                    
+                    // CORRECCIÓN: Verificar si es administrador basado en el rol
+                    $_SESSION['admin'] = ($usuario->id_rol == 1); // 1 = Administrador en tu DB
+                    
+                    // Guardar rol en sesión
+                    $rol = $usuario->getRol();
+                    $_SESSION['id_rol'] = $usuario->id_rol;
+                    $_SESSION['rol_nombre'] = $rol ? $rol->nombre : null;
+
+                    // Regenerar token CSRF después del login
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+                    // Verificar que la sesión se guardó
+                    session_write_close();
+
+                    header('Location: /objetosperdidos');
+                    exit;
+                }
+            } else {
+                $alertas['error'][] = 'Usuario no encontrado';
+            }
+        }
+
+        $alertas = array_merge($alertas, Usuario::getAlertas());
     }
+
+    $router->render('/login/login', [
+        'alertas' => $alertas
+    ]);
+}
 
     public static function logout()
     {
-        $_SESSION = [];
-
         // Si se desea destruir la cookie de sesión también
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
